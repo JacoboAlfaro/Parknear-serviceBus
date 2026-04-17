@@ -62,10 +62,10 @@ async fn main() {
     let app = Router::new()
         .route("/health", get(health_handler))
         .route("/*path", any(reverse_proxy_handler))
+        .layer(from_fn(rate_limit_middleware))
+        .layer(from_fn(blacklist_middleware))
         .layer(axum::Extension(rate_limiter))
         .layer(axum::Extension(ip_blacklist))
-        .layer(from_fn(blacklist_middleware))
-        .layer(from_fn(rate_limit_middleware))
         .layer(from_fn(correlation_middleware))
         .layer(TraceLayer::new_for_http())
         .with_state(state);

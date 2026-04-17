@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BUS_URL="${BUS_URL:-http://localhost:3000}"
+BUS_URL="${BUS_URL:-http://bus.parknear.online:3000}"
 PASS=0
 FAIL=0
 
@@ -100,21 +100,36 @@ else
   info "Si cambiaste REQUEST_BODY_LIMIT_BYTES, ajusta el tamaño del payload"
 fi
 
-# 6) Rate limiting: burst de requests para buscar 429
-TOTAL=140
-TOO_MANY=0
+# 6) Rate limiting: burst concurrente para buscar 429
+TOTAL=160
+rate_codes_dir=$(mktemp -d)
+pids=()
+
 for i in $(seq 1 "$TOTAL"); do
-  c=$(curl -sS -o /dev/null -w "%{http_code}" "${BUS_URL}/api/users/me" || true)
-  if [[ "$c" == "429" ]]; then
+  (
+    curl -sS -o /dev/null -w "%{http_code}" "${BUS_URL}/api/users/me" > "${rate_codes_dir}/${i}"
+  ) &
+  pids+=("$!")
+done
+
+for pid in "${pids[@]}"; do
+  wait "$pid" || true
+done
+
+TOO_MANY=0
+for file in "${rate_codes_dir}"/*; do
+  if [[ "$(<"$file")" == "429" ]]; then
     TOO_MANY=$((TOO_MANY + 1))
   fi
 done
 
+rm -rf "$rate_codes_dir"
+
 if (( TOO_MANY > 0 )); then
   pass "Rate limiting activo (429 detectados: ${TOO_MANY}/${TOTAL})"
 else
-  fail "No se detectaron 429 en burst de ${TOTAL} requests"
-  info "Puede pasar si el bus no toma tu IP como única fuente o si cambió la config"
+  fail "No se detectaron 429 en burst concurrente de ${TOTAL} requests"
+  info "Si sigue sin aparecer 429, la IP que ve el bus puede no ser la tuya o el despliegue tiene otra configuración"
 fi
 
 # 7) Blacklist (actualmente sin API runtime para bloquear IPs)
