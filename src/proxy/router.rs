@@ -70,20 +70,19 @@ pub async fn reverse_proxy_handler(
         .map(|q| format!("?{q}"))
         .unwrap_or_default();
 
-    let target: &ServiceTarget = match path.as_str() {
-        p if p.starts_with("/api/users") || p.starts_with("/api/auth") => {
-            &state.config.user_auth
-        }
-        p if p.starts_with("/api/zones") || p.starts_with("/api/tickets") => {
-            &state.config.zones_support
-        }
-        p if p.starts_with("/api/reservations") || p.starts_with("/api/payments") => {
-            &state.config.reservation_payment
-        }
+    let stripped_path = path.strip_prefix("/api").unwrap_or(&path);
+
+    let target: &ServiceTarget = match stripped_path {
+        p if p.starts_with("/auth") => &state.config.auth,
+        p if p.starts_with("/users") => &state.config.users,
+        p if p.starts_with("/zones") => &state.config.zones,
+        p if p.starts_with("/tickets") => &state.config.tickets,
+        p if p.starts_with("/reservations") => &state.config.reservations,
+        p if p.starts_with("/payments") => &state.config.payments,
         _ => return Err(StatusCode::NOT_FOUND),
     };
 
-    let target_url = format!("{}{}{}", target.base_url, path, query);
+    let target_url = format!("{}{}{}", target.base_url, stripped_path, query);
 
     let body_bytes = to_bytes(body, state.config.request_body_limit)
         .await

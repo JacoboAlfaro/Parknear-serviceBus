@@ -13,9 +13,12 @@ pub struct AppConfig {
     pub bind_addr: String,
     pub max_db_connections: u32,
     pub request_body_limit: usize,
-    pub user_auth: ServiceTarget,
-    pub zones_support: ServiceTarget,
-    pub reservation_payment: ServiceTarget,
+    pub auth: ServiceTarget,
+    pub users: ServiceTarget,
+    pub zones: ServiceTarget,
+    pub tickets: ServiceTarget,
+    pub reservations: ServiceTarget,
+    pub payments: ServiceTarget,
 }
 
 static CONFIG: OnceLock<AppConfig> = OnceLock::new();
@@ -38,23 +41,41 @@ impl AppConfig {
                     .ok()
                     .and_then(|v| v.parse().ok())
                     .unwrap_or(16 * 1024 * 1024),
-                user_auth: ServiceTarget {
-                    name: env::var("USER_AUTH_SERVICE_NAME")
-                        .unwrap_or_else(|_| "user_auth_service".to_string()),
-                    base_url: env::var("USER_AUTH_BASE_URL")
-                        .expect("USER_AUTH_BASE_URL es obligatoria"),
+                auth: ServiceTarget {
+                    name: env::var("AUTH_SERVICE_NAME")
+                        .unwrap_or_else(|_| "auth_service".to_string()),
+                    base_url: env::var("AUTH_BASE_URL")
+                        .expect("AUTH_BASE_URL es obligatoria"),
                 },
-                zones_support: ServiceTarget {
-                    name: env::var("ZONES_SUPPORT_SERVICE_NAME")
-                        .unwrap_or_else(|_| "zones_support_service".to_string()),
-                    base_url: env::var("ZONES_SUPPORT_BASE_URL")
-                        .expect("ZONES_SUPPORT_BASE_URL es obligatoria"),
+                users: ServiceTarget {
+                    name: env::var("USERS_SERVICE_NAME")
+                        .unwrap_or_else(|_| "users_service".to_string()),
+                    base_url: env::var("USERS_BASE_URL")
+                        .expect("USERS_BASE_URL es obligatoria"),
                 },
-                reservation_payment: ServiceTarget {
-                    name: env::var("RESERVATION_PAYMENT_SERVICE_NAME")
-                        .unwrap_or_else(|_| "reservation_payment_service".to_string()),
-                    base_url: env::var("RESERVATION_PAYMENT_BASE_URL")
-                        .expect("RESERVATION_PAYMENT_BASE_URL es obligatoria"),
+                zones: ServiceTarget {
+                    name: env::var("ZONES_SERVICE_NAME")
+                        .unwrap_or_else(|_| "zones_service".to_string()),
+                    base_url: env::var("ZONES_BASE_URL")
+                        .expect("ZONES_BASE_URL es obligatoria"),
+                },
+                tickets: ServiceTarget {
+                    name: env::var("TICKETS_SERVICE_NAME")
+                        .unwrap_or_else(|_| "tickets_service".to_string()),
+                    base_url: env::var("TICKETS_BASE_URL")
+                        .expect("TICKETS_BASE_URL es obligatoria"),
+                },
+                reservations: ServiceTarget {
+                    name: env::var("RESERVATIONS_SERVICE_NAME")
+                        .unwrap_or_else(|_| "reservations_service".to_string()),
+                    base_url: env::var("RESERVATIONS_BASE_URL")
+                        .expect("RESERVATIONS_BASE_URL es obligatoria"),
+                },
+                payments: ServiceTarget {
+                    name: env::var("PAYMENTS_SERVICE_NAME")
+                        .unwrap_or_else(|_| "payments_service".to_string()),
+                    base_url: env::var("PAYMENTS_BASE_URL")
+                        .expect("PAYMENTS_BASE_URL es obligatoria"),
                 },
             }
         })
