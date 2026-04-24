@@ -75,10 +75,10 @@ pub async fn reverse_proxy_handler(
     let target: &ServiceTarget = match stripped_path {
         p if p.starts_with("/auth") => &state.config.auth,
         p if p.starts_with("/users") => &state.config.users,
-        p if p.starts_with("/zones") => &state.config.zones,
+        p if p.starts_with("/zonas") => &state.config.zones,
         p if p.starts_with("/tickets") => &state.config.tickets,
-        p if p.starts_with("/reservations") => &state.config.reservations,
-        p if p.starts_with("/payments") => &state.config.payments,
+        p if p.starts_with("/reservas") => &state.config.reservations,
+        p if p.starts_with("/pagos") => &state.config.payments,
         _ => return Err(StatusCode::NOT_FOUND),
     };
 
